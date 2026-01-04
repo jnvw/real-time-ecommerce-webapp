@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Track Order #{{ order.id }}{% endblock %}
+
+{% block content %}
+<style>
+    .timeline { position: relative; padding: 20px 0; list-style: none; }
+    .timeline:before { content: ''; position: absolute; top: 0; bottom: 0; width: 4px; background: #dfeaf1; left: 31px; margin: 0; border-radius: 2px; }
+    .timeline > li { margin-bottom: 20px; position: relative; }
+    .timeline > li:after { content: ""; display: table; clear: both; }
+    .timeline > li .timeline-panel { width: calc(100% - 90px); float: right; padding: 20px; background: #dfdee4; border: 1px solid #ddd; border-radius: 8px; position: relative; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    .timeline > li .timeline-badge { color: #fff; width: 50px; height: 50px; line-height: 50px; font-size: 1.4em; text-align: center; position: absolute; top: 16px; left: 6px; z-index: 100; border-radius: 50%; }
+    .badge-success { background-color: #28a745; }
+    .badge-info { background-color: #17a2b8; }
+    .badge-primary { background-color: #0e437b; }
+    .badge-warning { background-color: #ffc107; }
+    .badge-secondary { background-color: #6c757d; }
+</style>
+
+<div class="container py-5">
+    <h2>Tracking Order #{{ order.id }}</h2>
+    <p class="lead">Current Status: <strong>{{ order.status }}</strong></p>
+
+    <ul class="timeline">
+        {% for history in order.status_history.all %}
+        <li>
+            <div class="timeline-badge 
+                {% if history.status == 'Delivered' %}badge-success
+                {% elif history.status == 'Shipped' or history.status == 'Out for Delivery' %}badge-info
+                {% elif history.status == 'Processing' %}badge-primary
+                {% else %}badge-secondary{% endif %}">
+                <i class="glyphicon glyphicon-check">✓</i>
+            </div>
+            <div class="timeline-panel">
+                <div class="timeline-heading">
+                    <h4 class="timeline-title">{{ history.status }}</h4>
+                    <p><small class="text-muted"><i class="glyphicon glyphicon-time"></i>{{ history.timestamp|date:"F d, Y, g:i a" }}</small></p>
+                </div>
+            </div>
+        </li>
+        {% endfor %}
+    </ul>
+</div>
+{% endblock %}

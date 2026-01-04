@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block title %}My Groups{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-7">
+        <h2 class="mb-4">My Shopping Groups</h2>
+        {% if user_groups %}
+            <div class="list-group">
+                {% for group in user_groups %}
+                    <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center 
+                        {% if group.id == active_group_id %}active{% endif %}">
+                        <div>
+                            <h5 class="mb-1 {% if group.id == active_group_id %}text-white{% endif %}">{{ group.name }}</h5>
+                            <small class="{% if group.id == active_group_id %}text-white-50{% else %}text-muted{% endif %}">
+                                Secret Code: {{ group.secret_code }}
+                            </small>
+                        </div>
+                        <div class="ms-auto d-flex align-items-center">
+                             <span class="badge bg-secondary rounded-pill me-3">{{ group.members.count }} Members</span>
+                            {% if group.id == active_group_id %}
+                                <span class="badge bg-light text-dark">Active</span>
+                            {% else %}
+                                <a href="{% url 'set_active_group' group.secret_code %}" class="btn btn-sm btn-outline-primary">Set as Active</a>
+                            {% endif %}
+                             <a href="{% url 'group_detail' group.secret_code %}" class="btn btn-sm btn-light ms-2">View Cart</a>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="alert alert-secondary">You are not a member of any group yet. Why not create one or join a friend's?</div>
+        {% endif %}
+    </div>
+    <div class="col-md-5">
+        <div class="p-4 border rounded bg-white shadow-sm mb-4">
+            <h4>Create a New Group</h4>
+            <form method="post">
+                {% csrf_token %}
+                {{ create_form.as_p }}
+                <button type="submit" name="create_group" class="btn btn-primary w-100">Create & Set Active</button>
+            </form>
+        </div>
+        <div class="p-4 border rounded bg-white shadow-sm">
+            <h4>Join an Existing Group</h4>
+            <form method="post">
+                {% csrf_token %}
+                {{ join_form.as_p }}
+                <button type="submit" name="join_group" class="btn btn-success w-100">Join & Set Active</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}
+    {% if category %}{{ category.name }}{% else %}Products{% endif %}
+{% endblock %}
+
+{% block content %}
+<style>
+    .rating-stars-small span { font-size: 1rem; color: #ffc107; }
+</style>
+
+<div class="container py-4">
+    <div class="row">
+        <!-- Category Sidebar -->
+        <div class="col-md-3">
+            <h3 class="mb-4">Categories</h3>
+            <div class="list-group">
+                <a href="{% url 'product_list' %}" class="list-group-item list-group-item-action {% if not category %}active{% endif %}">
+                    All Categories
+                </a>
+                {% for c in categories %}
+                <a href="{{ c.get_absolute_url }}" class="list-group-item list-group-item-action {% if category.slug == c.slug %}active{% endif %}">
+                    {{ c.name }}
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Products Display -->
+        <div class="col-md-9">
+            <header class="d-flex justify-content-between align-items-center pb-3 mb-4 border-bottom">
+                <h2 class="fw-light mb-0">{% if category %}{{ category.name }}{% else %}All Products{% endif %}</h2>
+                <!-- Sorting Dropdown -->
+                <form method="get" action="" class="d-flex align-items-center">
+                    <label for="sort" class="form-label me-2 mb-0">Sort by:</label>
+                    <select name="sort" id="sort" class="form-select form-select-sm" onchange="this.form.submit()">
+                        <option value="name" {% if sort_option == 'name' %}selected{% endif %}>Name</option>
+                        <option value="price_asc" {% if sort_option == 'price_asc' %}selected{% endif %}>Price: Low to High</option>
+                        <option value="price_desc" {% if sort_option == 'price_desc' %}selected{% endif %}>Price: High to Low</option>
+                    </select>
+                </form>
+            </header>
+
+            {% if active_group %}
+                <div class="alert alert-info">
+                    Shopping with group: <strong>{{ active_group.name }}</strong>.
+                    <a href="{% url 'group_dashboard' %}" class="alert-link ms-2">Change active group</a>
+                </div>
+            {% else %}
+                <div class="alert alert-warning">
+                    Please <a href="{% url 'group_dashboard' %}" class="alert-link">select an active group</a> to start shopping.
+                </div>
+            {% endif %}
+
+            <div class="row">
+                {% for product in products %}
+                <div class="col-6 col-md-6 col-lg-4 mb-4">
+                    <div class="card h-100 shadow-sm border-0 fade-in">
+                        <!-- Make the entire image a link to the detail page -->
+                        <a href="{{ product.get_absolute_url }}">
+                            {% if product.image %}
+                                <img src="{{ product.image.url }}" class="card-img-top" alt="{{ product.name }}" style="height: 220px; object-fit: cover;">
+                            {% else %}
+                                <img src="https://placehold.co/600x400/E1E1E1/444444?text={{product.name|truncatechars:15}}" class="card-img-top" alt="{{ product.name }}" style="height: 220px; object-fit: cover;">
+                            {% endif %}
+                        </a>
+                        <div class="card-body d-flex flex-column">
+                            <!-- Make the title a link to the detail page -->
+                            <h5 class="card-title"><a href="{{ product.get_absolute_url }}" class="text-dark text-decoration-none">{{ product.name }}</a></h5>
+                            <div class="d-flex align-items-center mb-2">
+                                <div class="rating-stars-small">
+                                    {% with rating=product.average_rating|stringformat:"f"|slice:"0:1"|add:"0" %}
+                                        {% for i in "12345"|make_list %}
+                                            <span>{% if i|add:"0" <= rating %}★{% else %}☆{% endif %}</span>
+                                        {% endfor %}
+                                    {% endwith %}
+                                </div>
+                                <small class="text-muted ms-2">({{ product.review_count }})</small>
+                            </div>
+                            <p class="card-text text-muted flex-grow-1">{{ product.description|truncatewords:15 }}</p>
+                            <p class="card-text fs-4 fw-bold text-end">${{ product.price }}</p>
+                            {% if active_group %}
+                                <a href="{% url 'add_to_cart' product.id %}" class="btn btn-primary mt-auto">Add to Group Cart</a>
+                            {% else %}
+                                <button class="btn btn-primary mt-auto" disabled>Add to Group Cart</button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="col">
+                    <div class="alert alert-secondary">
+                        <p class="mb-0">There are no products in this category.</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Pagination Controls -->
+            {% if products.has_other_pages %}
+            <nav aria-label="Page navigation" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% if products.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ products.previous_page_number }}&sort={{ sort_option }}">Previous</a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled"><span class="page-link">Previous</span></li>
+                    {% endif %}
+
+                    {% for i in products.paginator.page_range %}
+                        {% if products.number == i %}
+                            <li class="page-item active"><span class="page-link">{{ i }}</span></li>
+                        {% else %}
+                            <li class="page-item"><a class="page-link" href="?page={{ i }}&sort={{ sort_option }}">{{ i }}</a></li>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if products.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ products.next_page_number }}&sort={{ sort_option }}">Next</a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled"><span class="page-link">Next</span></li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

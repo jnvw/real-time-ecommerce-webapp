@@ -1,0 +1,526 @@
+{% extends "base.html" %}
+
+{% block title %}Log In - CollabShop{% endblock %}
+
+{% block content %}
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+    
+    .auth-wrapper {
+        min-height: calc(100vh - 120px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .auth-wrapper::before {
+        content: '';
+        position: absolute;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
+        background-size: 50px 50px;
+        animation: backgroundMove 20s linear infinite;
+        opacity: 0.3;
+    }
+    
+    @keyframes backgroundMove {
+        0% { transform: translate(0, 0); }
+        100% { transform: translate(50px, 50px); }
+    }
+    
+    .auth-container {
+        position: relative;
+        z-index: 1;
+        max-width: 1000px;
+        width: 100%;
+        background: #ffffff;
+        border-radius: 24px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        overflow: hidden;
+        animation: slideUp 0.6s ease-out;
+    }
+    
+    @keyframes slideUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .auth-panel {
+        padding: 60px 50px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+    
+    .auth-panel.left {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: #fff;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .auth-panel.left::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255,255,255,0.1) 2px, transparent 2px);
+        background-size: 30px 30px;
+        animation: float 15s ease-in-out infinite;
+    }
+    
+    @keyframes float {
+        0%, 100% { transform: translate(0, 0) rotate(0deg); }
+        50% { transform: translate(-20px, -20px) rotate(5deg); }
+    }
+    
+    .auth-panel.left .logo-icon {
+        width: 80px;
+        height: 80px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 30px;
+        font-size: 40px;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        animation: pulse 2s ease-in-out infinite;
+    }
+    
+    @keyframes pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+    }
+    
+    .auth-panel.left h1 {
+        font-size: 2.8rem;
+        font-weight: 800;
+        margin-bottom: 20px;
+        line-height: 1.2;
+        position: relative;
+        z-index: 1;
+    }
+    
+    .auth-panel.left p {
+        font-size: 1.15rem;
+        line-height: 1.8;
+        opacity: 0.95;
+        position: relative;
+        z-index: 1;
+    }
+    
+    .auth-panel.left .features {
+        margin-top: 40px;
+        position: relative;
+        z-index: 1;
+    }
+    
+    .auth-panel.left .features-item {
+        display: flex;
+        align-items: center;
+        margin-bottom: 15px;
+        font-size: 1rem;
+    }
+    
+    .auth-panel.left .features-item .icon {
+        width: 24px;
+        height: 24px;
+        margin-right: 12px;
+        font-size: 1.2rem;
+    }
+    
+    .auth-panel.right {
+        background: #ffffff;
+        padding: 60px 50px;
+    }
+    
+    .auth-panel.right .header {
+        text-align: center;
+        margin-bottom: 40px;
+    }
+    
+    .auth-panel.right h2 {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #1a1a1a;
+        margin-bottom: 8px;
+    }
+    
+    .auth-panel.right .sub-heading {
+        color: #6b7280;
+        font-size: 0.95rem;
+        margin-bottom: 0;
+    }
+    
+    .input-group {
+        margin-bottom: 24px;
+        position: relative;
+    }
+    
+    .input-group label {
+        display: block;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 8px;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .input-wrapper {
+        position: relative;
+    }
+    
+    .input-wrapper .input-icon {
+        position: absolute;
+        left: 16px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #9ca3af;
+        font-size: 1.2rem;
+        z-index: 1;
+    }
+    
+    .input-group input {
+        width: 100%;
+        padding: 14px 16px 14px 48px;
+        border: 2px solid #e5e7eb;
+        border-radius: 12px;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        background: #f9fafb;
+        color: #1a1a1a;
+    }
+    
+    .input-group input:focus {
+        outline: none;
+        border-color: #667eea;
+        background: #ffffff;
+        box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+    }
+    
+    .input-group input.error {
+        border-color: #ef4444;
+        background: #fef2f2;
+    }
+    
+    .input-group input.error:focus {
+        box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.1);
+    }
+    
+    .field-error {
+        color: #ef4444;
+        font-size: 0.85rem;
+        margin-top: 6px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    
+    .error-message {
+        background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+        color: #991b1b;
+        padding: 16px 20px;
+        border-radius: 12px;
+        border: 2px solid #fca5a5;
+        margin-bottom: 24px;
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        animation: shake 0.5s ease-in-out;
+    }
+    
+    @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        25% { transform: translateX(-10px); }
+        75% { transform: translateX(10px); }
+    }
+    
+    .error-message::before {
+        content: "⚠";
+        font-size: 1.3rem;
+    }
+    
+    .btn-login {
+        width: 100%;
+        padding: 16px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: #ffffff;
+        border: none;
+        border-radius: 12px;
+        font-size: 1.05rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+        margin-top: 8px;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    }
+    
+    .btn-login::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.3);
+        transform: translate(-50%, -50%);
+        transition: width 0.6s, height 0.6s;
+    }
+    
+    .btn-login:hover::before {
+        width: 300px;
+        height: 300px;
+    }
+    
+    .btn-login:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+    }
+    
+    .btn-login:active {
+        transform: translateY(0);
+    }
+    
+    .btn-login span {
+        position: relative;
+        z-index: 1;
+    }
+    
+    .footer-text {
+        text-align: center;
+        margin-top: 32px;
+        color: #6b7280;
+        font-size: 0.95rem;
+    }
+    
+    .footer-text a {
+        color: #667eea;
+        text-decoration: none;
+        font-weight: 600;
+        transition: color 0.3s ease;
+        position: relative;
+    }
+    
+    .footer-text a::after {
+        content: '';
+        position: absolute;
+        bottom: -2px;
+        left: 0;
+        width: 0;
+        height: 2px;
+        background: #667eea;
+        transition: width 0.3s ease;
+    }
+    
+    .footer-text a:hover::after {
+        width: 100%;
+    }
+    
+    .footer-text a:hover {
+        color: #764ba2;
+    }
+    
+    .divider {
+        display: flex;
+        align-items: center;
+        margin: 24px 0;
+        text-align: center;
+    }
+    
+    .divider::before,
+    .divider::after {
+        content: '';
+        flex: 1;
+        border-bottom: 1px solid #e5e7eb;
+    }
+    
+    .divider span {
+        padding: 0 15px;
+        color: #9ca3af;
+        font-size: 0.85rem;
+    }
+    
+    @media (max-width: 968px) {
+        .auth-container {
+            grid-template-columns: 1fr;
+            max-width: 500px;
+        }
+        
+        .auth-panel.left {
+            display: none;
+        }
+        
+        .auth-panel.right {
+            padding: 50px 40px;
+        }
+        
+        .auth-panel.right h2 {
+            font-size: 1.75rem;
+        }
+    }
+    
+    @media (max-width: 640px) {
+        .auth-panel.right {
+            padding: 40px 30px;
+        }
+        
+        .auth-panel.right h2 {
+            font-size: 1.5rem;
+        }
+        
+        .input-group input {
+            padding: 12px 14px 12px 44px;
+        }
+    }
+</style>
+
+<div class="auth-wrapper">
+    <div class="auth-container">
+        <div class="auth-panel left">
+            <div class="logo-icon">🛒</div>
+            <h1>Welcome Back!</h1>
+            <p>Continue your collaborative shopping journey. Join groups, share carts, and make purchases together with friends and family.</p>
+            <div class="features">
+                <div class="features-item">
+                    <span class="icon">✨</span>
+                    <span>Real-time collaboration</span>
+                </div>
+                <div class="features-item">
+                    <span class="icon">🛍️</span>
+                    <span>Shared shopping carts</span>
+                </div>
+                <div class="features-item">
+                    <span class="icon">💬</span>
+                    <span>Integrated chat system</span>
+                </div>
+                <div class="features-item">
+                    <span class="icon">⚡</span>
+                    <span>Instant decision making</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="auth-panel right">
+            <div class="header">
+                <h2>Sign In</h2>
+                <p class="sub-heading">Enter your credentials to access your account</p>
+            </div>
+            
+            <form method="post" id="loginForm">
+                {% csrf_token %}
+                
+                {% if form.errors %}
+                    <div class="error-message">
+                        {% if form.non_field_errors %}
+                            {{ form.non_field_errors|first }}
+                        {% else %}
+                            Please enter a correct username and password. Note that both fields may be case-sensitive.
+                        {% endif %}
+                    </div>
+                {% endif %}
+                
+                <div class="input-group">
+                    <label for="id_username">Username</label>
+                    <div class="input-wrapper">
+                        <span class="input-icon">👤</span>
+                        <input 
+                            type="text" 
+                            name="username" 
+                            id="id_username" 
+                            class="{% if form.username.errors %}error{% endif %}"
+                            value="{% if form.username.value %}{{ form.username.value }}{% endif %}"
+                            placeholder="Enter your username"
+                            required
+                            autocomplete="username"
+                        >
+                    </div>
+                    {% if form.username.errors %}
+                        <span class="field-error">
+                            <span>⚠</span>
+                            {{ form.username.errors|first }}
+                        </span>
+                    {% endif %}
+                </div>
+                
+                <div class="input-group">
+                    <label for="id_password">Password</label>
+                    <div class="input-wrapper">
+                        <span class="input-icon">🔒</span>
+                        <input 
+                            type="password" 
+                            name="password" 
+                            id="id_password" 
+                            class="{% if form.password.errors %}error{% endif %}"
+                            placeholder="Enter your password"
+                            required
+                            autocomplete="current-password"
+                        >
+                    </div>
+                    {% if form.password.errors %}
+                        <span class="field-error">
+                            <span>⚠</span>
+                            {{ form.password.errors|first }}
+                        </span>
+                    {% endif %}
+                </div>
+                
+                <button type="submit" class="btn-login">
+                    <span>Sign In</span>
+                </button>
+                
+                <p class="footer-text">
+                    Don't have an account? 
+                    <a href="{% url 'signup' %}">Create one now</a>
+                </p>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Add smooth focus animations
+    document.querySelectorAll('.input-group input').forEach(input => {
+        input.addEventListener('focus', function() {
+            this.parentElement.style.transform = 'scale(1.02)';
+        });
+        
+        input.addEventListener('blur', function() {
+            this.parentElement.style.transform = 'scale(1)';
+        });
+    });
+    
+    // Form submission animation
+    document.getElementById('loginForm').addEventListener('submit', function(e) {
+        const btn = document.querySelector('.btn-login');
+        btn.innerHTML = '<span>Signing in...</span>';
+        btn.style.opacity = '0.7';
+        btn.style.cursor = 'not-allowed';
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - CollabShop</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .filter-btn.active { background-color: #4a90e2; color: white; }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <div class="flex h-screen">
+        <!-- Sidebar -->
+        <div class="hidden md:flex flex-col w-64 bg-gray-900 text-white">
+            <div class="flex items-center justify-center h-16 border-b border-gray-700">
+                <span class="text-2xl font-bold">CollabShop</span>
+            </div>
+            <div class="flex-1 overflow-y-auto">
+                <nav class="px-2 py-4">
+                    <h3 class="px-4 mb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">Main</h3>
+                    <a href="{% url 'admin_dashboard' %}" class="flex items-center px-4 py-2 bg-gray-700 rounded-md">
+                        <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+                        Dashboard
+                    </a>
+                    <h3 class="px-4 mt-4 mb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">Management</h3>
+                    <a href="/admin/shop/order/" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 rounded-md">
+                         <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+                        Orders
+                    </a>
+                    <a href="/admin/shop/product/" class="flex items-center px-4 py-2 mt-1 text-gray-300 hover:bg-gray-700 rounded-md">
+                        <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+                        Products
+                    </a>
+                     <a href="/admin/auth/user/" class="flex items-center px-4 py-2 mt-1 text-gray-300 hover:bg-gray-700 rounded-md">
+                         <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M15 21v-2a4 4 0 00-4-4H9a4 4 0 00-4 4v2" /></svg>
+                        Customers
+                    </a>
+                </nav>
+            </div>
+        </div>
+        <!-- Main content -->
+        <div class="flex-1 flex flex-col overflow-hidden">
+             <main class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100 p-4 md:p-6">
+                 <div class="flex justify-between items-center mb-4">
+                    <h1 class="text-2xl font-semibold text-gray-800">Sales Overview</h1>
+                    <div id="date-range-filter" class="flex items-center bg-white rounded-lg shadow-sm p-1">
+                        <button data-range="7" class="filter-btn px-4 py-1 text-sm rounded-md {% if active_range == '7' %}active{% endif %}">7 Days</button>
+                        <button data-range="30" class="filter-btn px-4 py-1 text-sm rounded-md {% if active_range == '30' %}active{% endif %}">30 Days</button>
+                        <button data-range="90" class="filter-btn px-4 py-1 text-sm rounded-md {% if active_range == '90' %}active{% endif %}">90 Days</button>
+                    </div>
+                 </div>
+                <!-- KPI Cards Section -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div class="bg-white rounded-lg shadow-md p-6">
+                        <h4 class="text-sm font-medium text-gray-500">Total Sales</h4>
+                        <p id="total-sales" class="text-3xl font-bold text-gray-900 mt-1">${{ total_sales }}</p>
+                    </div>
+                    <div class="bg-white rounded-lg shadow-md p-6">
+                        <h4 class="text-sm font-medium text-gray-500">Net Sales</h4>
+                        <p id="net-sales" class="text-3xl font-bold text-gray-900 mt-1">${{ net_sales }}</p>
+                    </div>
+                     <div class="bg-white rounded-lg shadow-md p-6">
+                        <h4 class="text-sm font-medium text-gray-500">New Customers</h4>
+                        <p id="new-customers" class="text-3xl font-bold text-gray-900 mt-1">{{ new_customers }}</p>
+                    </div>
+                     <div class="bg-white rounded-lg shadow-md p-6">
+                        <h4 class="text-sm font-medium text-gray-500">Total Orders</h4>
+                        <p id="total-orders" class="text-3xl font-bold text-gray-900 mt-1">{{ total_orders }}</p>
+                    </div>
+                </div>
+                 <!-- Charts Section -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+                    <div class="bg-white rounded-lg shadow-md p-6">
+                        <h3 class="text-lg font-semibold text-gray-900">Daily Sales</h3>
+                        <div class="relative h-72"><canvas id="salesBarChart"></canvas></div>
+                    </div>
+                    <div class="bg-white rounded-lg shadow-md p-6">
+                         <h3 class="text-lg font-semibold text-gray-900">Top 5 Selling Products (by Qty)</h3>
+                         <div class="relative h-72"><canvas id="topProductsChart"></canvas></div>
+                    </div>
+                </div>
+                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+                    <div class="bg-white rounded-lg shadow-md p-6">
+                        <h3 class="text-lg font-semibold text-gray-900">Sales by Category</h3>
+                        <div class="relative h-72"><canvas id="categoryDonutChart"></canvas></div>
+                    </div>
+                    <div class="bg-white rounded-lg shadow-md p-6">
+                        <h3 class="text-lg font-semibold text-gray-900">Inventory vs. Purchased (by Category)</h3>
+                        <div class="relative h-72"><canvas id="radialChart"></canvas></div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+    <div class="mt-6 bg-white rounded-lg shadow-md p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 text-red-600">Inventory Alerts</h3>
+                    <p class="text-sm text-gray-500 mb-4">Products with stock at or below {{ low_stock_threshold }}</p>
+                    {% if low_stock_products %}
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Product</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Category</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Stock Left</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200">
+                                    {% for product in low_stock_products %}
+                                    <tr>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ product.name }}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ product.category.name }}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-red-600">{{ product.stock }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center text-gray-500 py-4">
+                            <p>No products are currently low on stock. Great job!</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </main>
+        </div>
+    </div>
+<script>
+    let salesChart, categoryChart, topProductsChart, radialChart;
+
+    const initialData = {
+        salesLabels: {{ sales_by_day_labels|safe }} || [],
+        salesData: {{ sales_by_day_data|safe }} || [],
+        categoryLabels: {{ category_labels|safe }} || [],
+        categoryData: {{ category_data|safe }} || [],
+        topProductsLabels: {{ top_products_labels|safe }} || [],
+        topProductsData: {{ top_products_data|safe }} || [],
+        radialLabels: {{ radial_labels|safe }} || [],
+        radialTotalData: {{ radial_total_data|safe }} || [],
+        radialPurchasedData: {{ radial_purchased_data|safe }} || [],
+    };
+
+    function createCharts(data) {
+        // Sales Bar Chart
+        salesChart = new Chart(document.getElementById('salesBarChart').getContext('2d'), {
+            type: 'bar',
+            data: { labels: data.salesLabels, datasets: [{ label: 'Daily Sales', data: data.salesData, backgroundColor: '#4a90e2' }] },
+            options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } }, plugins: { legend: { display: false } } }
+        });
+
+        // Category Donut Chart
+        categoryChart = new Chart(document.getElementById('categoryDonutChart').getContext('2d'), {
+            type: 'doughnut',
+            data: { labels: data.categoryLabels, datasets: [{ data: data.categoryData, backgroundColor: ['#4a90e2', '#50e3c2', '#f5a623', '#bd10e0', '#e0104e', '#10e0bd'], borderWidth: 0 }] },
+            options: { responsive: true, maintainAspectRatio: false, cutout: '70%', plugins: { legend: { position: 'bottom' } } }
+        });
+
+        // Top Products Chart
+        topProductsChart = new Chart(document.getElementById('topProductsChart').getContext('2d'), {
+            type: 'bar',
+            data: { labels: data.topProductsLabels, datasets: [{ label: 'Quantity Sold', data: data.topProductsData, backgroundColor: '#50e3c2' }] },
+            options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, scales: { x: { beginAtZero: true } }, plugins: { legend: { display: false } } }
+        });
+        
+        // Radial (Polar Area) Chart
+        radialChart = new Chart(document.getElementById('radialChart').getContext('2d'), {
+            type: 'polarArea',
+            data: {
+                labels: data.radialLabels,
+                datasets: [
+                    { label: 'Total Products in Stock', data: data.radialTotalData, backgroundColor: 'rgba(74, 144, 226, 0.5)' },
+                    { label: 'Distinct Products Purchased', data: data.radialPurchasedData, backgroundColor: 'rgba(80, 227, 194, 0.5)' }
+                ]
+            },
+            options: { responsive: true, maintainAspectRatio: false, scales: { r: { beginAtZero: true } }, plugins: { legend: { position: 'bottom' } } }
+        });
+    }
+
+    function updateDashboard(range) {
+        fetch(`{% url 'admin_dashboard' %}?range=${range}`, { headers: { 'X-Requested-With': 'XMLHttpRequest' }})
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('total-sales').innerText = '$' + data.total_sales;
+            document.getElementById('net-sales').innerText = '$' + data.net_sales;
+            document.getElementById('new-customers').innerText = data.new_customers;
+            document.getElementById('total-orders').innerText = data.total_orders;
+
+            salesChart.data.labels = data.sales_by_day_labels;
+            salesChart.data.datasets[0].data = data.sales_by_day_data;
+            salesChart.update();
+
+            categoryChart.data.labels = data.category_labels;
+            categoryChart.data.datasets[0].data = data.category_data;
+            categoryChart.update();
+            
+            topProductsChart.data.labels = data.top_products_labels;
+            topProductsChart.data.datasets[0].data = data.top_products_data;
+            topProductsChart.update();
+
+            radialChart.data.labels = data.radial_labels;
+            radialChart.data.datasets[0].data = data.radial_total_data;
+            radialChart.data.datasets[1].data = data.radial_purchased_data;
+            radialChart.update();
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        createCharts(initialData);
+        document.querySelectorAll('.filter-btn').forEach(button => {
+            button.addEventListener('click', () => {
+                document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+                updateDashboard(button.dataset.range);
+            });
+        });
+    });
+</script>
+</body>
+</html>

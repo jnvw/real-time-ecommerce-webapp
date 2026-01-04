@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block title %}Order History{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <header class="pb-3 mb-4 border-bottom">
+        <h2 class="fw-light">Your Groups' Order History</h2>
+    </header>
+
+    {% if not orders %}
+    <div class="alert alert-info">
+        <p class="mb-0">No orders have been placed in any of your groups yet.</p>
+    </div>
+    {% else %}
+    <div class="accordion" id="orderHistoryAccordion">
+        {% for order in orders %}
+        <div class="accordion-item shadow-sm mb-2">
+            <h2 class="accordion-header" id="heading{{ order.id }}">
+                <button class="accordion-button {% if not forloop.first %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ order.id }}" aria-expanded="{% if forloop.first %}true{% else %}false{% endif %}" aria-controls="collapse{{ order.id }}">
+                    <span class="fw-bold me-3">Order #{{ order.id }}</span>
+                    <span class="text-muted me-auto">Placed on {{ order.created_at|date:"F d, Y" }}</span>
+                    <span class="badge 
+                        {% if order.status == 'Delivered' %}bg-success
+                        {% elif order.status == 'Shipped' or order.status == 'Out for Delivery' %}bg-info
+                        {% elif order.status == 'Processing' %}bg-primary
+                        {% else %}bg-secondary{% endif %} me-3">
+                        {{ order.status }}
+                    </span>
+                </button>
+            </h2>
+            <div id="collapse{{ order.id }}" class="accordion-collapse collapse {% if forloop.first %}show{% endif %}" aria-labelledby="heading{{ order.id }}" data-bs-parent="#orderHistoryAccordion">
+                <div class="accordion-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <p class="mb-1"><strong>Group:</strong> {{ order.group.name }}</p>
+                            <p><strong>Placed by:</strong> {{ order.user.username }}</p>
+                            <h6>Items Purchased:</h6>
+                            <ul class="list-group list-group-flush">
+                                {% for item in order.items.all %}
+                                    <li class="list-group-item d-flex align-items-center">
+                                        {% if item.product.image %}
+                                            <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}" class="rounded me-3" style="width: 50px; height: 50px; object-fit: cover;">
+                                        {% else %}
+                                            <img src="https://placehold.co/100x100/E1E1E1/444444?text=Img" class="rounded me-3" style="width: 50px; height: 50px; object-fit: cover;">
+                                        {% endif %}
+                                        <div class="flex-grow-1">
+                                            {{ item.product.name }}
+                                        </div>
+                                        <span class="badge bg-secondary">Qty: {{ item.quantity }}</span>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <h5>Order Total</h5>
+                            <p class="fs-3 fw-bold text-success">₹ {{ order.total_price|floatformat:2 }}</p>
+                             <div class="d-grid gap-2">
+                                <a href="{% url 'order_tracking' order.id %}" class="btn btn-primary">Track Order</a>
+                                <a href="{% url 'view_invoice' order.id %}" class="btn btn-outline-secondary" target="_blank">View Invoice</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

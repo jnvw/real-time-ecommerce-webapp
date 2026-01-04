@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}Complete Your Payment{% endblock %}
+
+{% block content %}
+<div class="container text-center py-5">
+    <h2>Redirecting to Payment...</h2>
+    <p class="lead text-muted">Please wait while we securely redirect you to the payment page. Do not refresh or press back.</p>
+    <div class="spinner-border text-primary mt-4" role="status">
+        <span class="visually-hidden">Loading...</span>
+    </div>
+</div>
+
+<!-- This script will automatically open the Cashfree payment popup -->
+<script src="https://sdk.cashfree.com/js/v3/cashfree.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const cashfree = new Cashfree({
+            mode: "sandbox" // Use "production" for real payments
+        });
+        
+        const paymentSessionId = "{{ payment_session_id }}";
+        
+        if (paymentSessionId) {
+            cashfree.checkout({
+                paymentSessionId: paymentSessionId,
+                redirectTarget: "_self" // Opens in the same window
+            }).then((result) => {
+                if (result.error) {
+                    alert("Payment Error: " + result.error.message);
+                    // Redirect back to the cart or group page on error
+                    window.location.href = "/"; 
+                }
+                if (result.redirect) {
+                    console.log("Redirecting to payment page");
+                }
+            });
+        } else {
+            alert("Could not initialize payment. Please try again.");
+            window.location.href = "/";
+        }
+    });
+</script>
+{% endblock %}

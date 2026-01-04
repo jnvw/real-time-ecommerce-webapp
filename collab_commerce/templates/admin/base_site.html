@@ -1,0 +1,11 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block nav-global %}
+    <div style="float: right; margin: 0.5em 1em;">
+        <a href="{% url 'admin_dashboard' %}" class="button" style="background-color: #4a90e2; color: white;">
+            {% trans 'Analytics Dashboard' %}
+        </a>
+    </div>
+    {{ block.super }}
+{% endblock %}

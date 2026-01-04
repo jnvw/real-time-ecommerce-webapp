@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+{% block title %}{{ group.name }}{% endblock %}
+
+{% block content %}
+<style>
+    #chat-log {
+        background-color: #e5ddd5;
+        background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png');
+        padding: 10px;
+        display: flex;
+        flex-direction: column;
+    }
+    .chat-bubble {
+        max-width: 70%;
+        padding: 8px 12px;
+        border-radius: 8px;
+        margin-bottom: 10px;
+        position: relative;
+    }
+    .chat-bubble-container {
+        display: flex;
+        flex-direction: column;
+    }
+    .chat-bubble-container.incoming {
+        align-items: flex-start;
+    }
+    .chat-bubble-container.outgoing {
+        align-items: flex-end;
+    }
+    .chat-bubble-incoming {
+        background-color: #ffffff;
+        align-self: flex-start;
+    }
+    .chat-bubble-outgoing {
+        background-color: #dcf8c6;
+        align-self: flex-end;
+    }
+    .chat-author {
+        font-weight: bold;
+        font-size: 0.8rem;
+        margin-bottom: 4px;
+        color: #555;
+    }
+    .chat-timestamp {
+        font-size: 0.7rem;
+        color: #999;
+        text-align: right;
+        margin-top: 4px;
+    }
+</style>
+
+<!-- Toast Notification Container -->
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1050">
+  <div id="cartToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+    <div class="toast-header">
+      <svg class="rounded me-2" width="20" height="20" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" preserveAspectRatio="xMidYMid slice" focusable="false"><rect width="100%" height="100%" fill="#007aff"></rect></svg>
+      <strong class="me-auto">Group Notification</strong>
+      <small>Just now</small>
+      <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+    </div>
+    <div class="toast-body">
+      <!-- Notification message will be inserted here -->
+    </div>
+  </div>
+</div>
+
+
+<div class="mb-4">
+    <h2>Group: {{ group.name }}</h2>
+    <p class="text-muted">Share this code with family and friends: <strong class="user-select-all">{{ group.secret_code }}</strong></p>
+</div>
+
+<div class="row g-4">
+    <!-- Shared Cart Column -->
+    <div class="col-lg-7">
+        <h3>Shared Cart</h3>
+        <div id="cart-container" class="p-3 border rounded bg-white shadow-sm" style="min-height: 300px;">
+            <div class="d-flex justify-content-center align-items-center h-100">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading cart...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chat Column -->
+    <div class="col-lg-5">
+        <h3>Group Chat</h3>
+        <div class="d-flex flex-column h-100">
+             <div id="chat-log" class="border rounded shadow-sm flex-grow-1" style="height: 400px; overflow-y: scroll;">
+                {% for msg in chat_messages %}
+                    <div class="chat-bubble-container {% if msg.user.username == current_user_username %}outgoing{% else %}incoming{% endif %}">
+                        <div class="chat-bubble {% if msg.user.username == current_user_username %}chat-bubble-outgoing{% else %}chat-bubble-incoming{% endif %}">
+                            <div class="chat-author">{{ msg.user.username }}</div>
+                            {{ msg.message }}
+                            <div class="chat-timestamp">{{ msg.timestamp|date:"g:i a" }}</div>
+                        </div>
+                    </div>
+                {% empty %}
+                    <div class="text-muted text-center mt-5" id="chat-placeholder">No messages yet. Say hi!</div>
+                {% endfor %}
+            </div>
+            <form id="chat-form" class="mt-2">
+                <div class="input-group">
+                    <input type="text" id="chat-message-input" class="form-control" placeholder="Type a message..." autocomplete="off">
+                    <button id="chat-message-submit" class="btn btn-primary">Send</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const currentUsername = '{{ current_user_username }}';
+    const chatLog = document.querySelector('#chat-log');
+    const cartContainer = document.querySelector('#cart-container');
+    const chatForm = document.querySelector('#chat-form');
+    const chatInput = document.querySelector('#chat-message-input');
+
+    const chatSocket = new WebSocket('ws://' + window.location.host + '/ws/group/' + '{{ group.secret_code }}/');
+
+    chatSocket.onopen = function(e) {
+        console.log("WebSocket connection established.");
+        chatSocket.send(JSON.stringify({'type': 'get_cart'}));
+    };
+
+    chatSocket.onmessage = function(e) {
+        const data = JSON.parse(e.data);
+        if (data.type === 'new_chat_message') {
+            const placeholder = document.getElementById('chat-placeholder');
+            if (placeholder) placeholder.remove();
+
+            const isOutgoing = data.user === currentUsername;
+            const bubbleContainer = document.createElement('div');
+            bubbleContainer.className = 'chat-bubble-container ' + (isOutgoing ? 'outgoing' : 'incoming');
+
+            const bubble = document.createElement('div');
+            bubble.className = 'chat-bubble ' + (isOutgoing ? 'chat-bubble-outgoing' : 'chat-bubble-incoming');
+
+            bubble.innerHTML = `
+                <div class="chat-author">${data.user}</div>
+                ${data.message}
+                <div class="chat-timestamp">${data.timestamp}</div>
+            `;
+            
+            bubbleContainer.appendChild(bubble);
+            chatLog.appendChild(bubbleContainer);
+            chatLog.scrollTop = chatLog.scrollHeight;
+
+        } else if (data.type === 'cart_update') {
+            cartContainer.innerHTML = data.cart_html;
+
+        } else if (data.type === 'show_notification') {
+            const toastElement = document.getElementById('cartToast');
+            const toastBody = toastElement.querySelector('.toast-body');
+            
+            toastBody.textContent = data.message;
+            
+            const toast = new bootstrap.Toast(toastElement);
+            toast.show();
+        }
+    };
+
+    chatSocket.onclose = function(e) {
+        console.error('Chat socket closed unexpectedly');
+        chatLog.innerHTML += '<div class="text-danger fw-bold">Connection lost. Please refresh the page.</div>';
+    };
+
+    chatForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const message = chatInput.value;
+        if (message.trim() !== '') {
+            chatSocket.send(JSON.stringify({
+                'type': 'chat_message',
+                'message': message
+            }));
+            chatInput.value = '';
+        }
+    });
+
+    chatLog.scrollTop = chatLog.scrollHeight;
+</script>
+{% endblock %}

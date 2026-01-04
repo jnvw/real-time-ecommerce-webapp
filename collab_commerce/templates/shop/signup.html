@@ -1,0 +1,182 @@
+{% extends "base.html" %}
+
+{% block title %}Sign Up{% endblock %}
+
+{% block content %}
+<style>
+    .auth-wrapper {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: calc(100vh - 150px); /* Adjust based on navbar height */
+    }
+    .auth-container {
+        display: flex;
+        width: 100%;
+        max-width: 900px;
+        min-height: 600px;
+        background-color: #fff;
+        border-radius: 20px;
+        box-shadow: 0 14px 28px rgba(0, 0, 0, 0.1), 0 10px 10px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+    }
+    .auth-panel {
+        width: 50%;
+        padding: 50px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+    .auth-panel.left {
+        background: linear-gradient(45deg, #50e3c2, #4a90e2);
+        color: #fff;
+    }
+    .auth-panel.left h1 {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 20px;
+    }
+    .auth-panel.left p {
+        font-size: 1.1rem;
+        line-height: 1.6;
+    }
+    .auth-panel.right {
+        background-color: #fff;
+    }
+    .auth-panel.right h2 {
+        font-weight: 700;
+        color: #333;
+        margin-bottom: 10px;
+        text-align: center;
+    }
+    .auth-panel.right .sub-heading {
+        color: #888;
+        text-align: center;
+        margin-bottom: 30px;
+    }
+    .form-field-group {
+        margin-bottom: 15px;
+    }
+    .form-field-group label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: 600;
+        color: #555;
+    }
+    .form-field-group input {
+        width: 100%;
+        padding: 12px 15px;
+        background-color: #f4f4f4;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+    }
+    .form-field-group input:focus {
+        outline: none;
+        border-color: #50e3c2;
+        box-shadow: 0 0 0 2px rgba(80, 227, 194, 0.2);
+    }
+    .auth-panel.right button {
+        width: 100%;
+        padding: 12px;
+        border-radius: 8px;
+        border: none;
+        background-color: #50e3c2;
+        color: #fff;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+        margin-top: 10px;
+    }
+    .auth-panel.right button:hover {
+        background-color: #3bcba8;
+    }
+    .auth-panel.right .footer-text {
+        text-align: center;
+        margin-top: 20px;
+        color: #888;
+    }
+    .auth-panel.right a {
+        color: #4a90e2;
+        text-decoration: none;
+        font-weight: 600;
+    }
+    .errorlist {
+        list-style: none;
+        padding: 5px 0 0 0;
+        margin: 0;
+        font-size: 13px;
+        color: #e74c3c;
+    }
+     .helptext {
+        font-size: 12px;
+        color: #888;
+        margin-top: 5px;
+        display: block;
+    }
+
+    @media (max-width: 768px) {
+        .auth-panel.left {
+            display: none;
+        }
+        .auth-panel.right {
+            width: 100%;
+        }
+    }
+</style>
+
+<div class="auth-wrapper">
+    <div class="auth-container">
+        <div class="auth-panel left">
+            <h1>Join Us and Unlock Possibilities!</h1>
+            <p>Welcome to CollabShop, where your shopping journey begins. Sign up now to access exclusive features, create shopping groups, and experience a seamless user journey.</p>
+        </div>
+        <div class="auth-panel right">
+            <h2>Create an Account</h2>
+            <p class="sub-heading">Let's get you started!</p>
+            <form method="post">
+                {% csrf_token %}
+
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger p-2" role="alert">
+                        {% for error in form.non_field_errors %}
+                            {{ error }}
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                <div class="form-field-group">
+                    <label for="id_username">Username</label>
+                    {{ form.username }}
+                    {{ form.username.errors }}
+                </div>
+                <div class="form-field-group">
+                    <label for="id_password1">Password</label>
+                    {{ form.password1 }}
+                    {% if form.password1.help_text %}
+                        <div class="helptext">{{ form.password1.help_text|safe }}</div>
+                    {% endif %}
+                    {{ form.password1.errors }}
+                </div>
+                <div class="form-field-group">
+                    <label for="id_password2">Confirm Password</label>
+                    {{ form.password2 }}
+                    {{ form.password2.errors }}
+                </div>
+                
+                <button type="submit">Sign Up</button>
+                <p class="footer-text">Already have an account? <a href="{% url 'login' %}">Sign in</a></p>
+            </form>
+        </div>
+    </div>
+</div>
+<script>
+    // Add placeholders to the Django form fields
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelector('#id_username').placeholder = 'Enter your username';
+        document.querySelector('#id_password1').placeholder = 'Enter a strong password';
+        document.querySelector('#id_password2').placeholder = 'Confirm your password';
+    });
+</script>
+{% endblock %}
