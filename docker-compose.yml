@@ -19,7 +19,7 @@ services:
       sh -c "
       python manage.py migrate --noinput &&
       python manage.py collectstatic --noinput &&
-      daphne -b 0.0.0.0 -p 8000 collab_commerce.asgi:application
+      daphne -b 0.0.0.0 -p 8080 collab_commerce.asgi:application
       "
     volumes:
       - ./collab_commerce:/app
@@ -35,12 +35,6 @@ services:
       REDIS_URL: redis://redis:6379/0
       REDIS_HOST: redis
       REDIS_PORT: 6379
-
-      ALLOWED_HOSTS: localhost,127.0.0.1,*
-      CSRF_TRUSTED_ORIGINS: http://localhost:8000
-
-      SESSION_COOKIE_SECURE: "False"
-      CSRF_COOKIE_SECURE: "False"
 
     depends_on:
       redis:
