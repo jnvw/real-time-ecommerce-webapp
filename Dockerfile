@@ -34,5 +34,5 @@ RUN python manage.py collectstatic --noinput || true
 # Expose port
 EXPOSE 8080
 #CMD ["sh", "-c", "python manage.py migrate --noinput && python manage.py collectstatic --noinput && exec daphne -b 0.0.0.0 -p ${PORT:-8080} collab_commerce.asgi:application"]
-CMD ["sh", "-c", "exec daphne -b 0.0.0.0 -p ${PORT:-8080} collab_commerce.asgi:application"]
+CMD ["sh", "-c", "exec daphne -b 0.0.0.0 -p ${PORT} collab_commerce.asgi:application"]
 
