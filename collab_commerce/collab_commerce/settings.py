@@ -175,12 +175,16 @@ if REDIS_URL or REDIS_PUBLIC_URL:
     # Railway format examples:
     # - redis://default:password@hostname:port
     # - redis://hostname:port
+    import sys
     try:
         parsed = urlparse(redis_url)
         redis_host = parsed.hostname or 'localhost'
         redis_port = parsed.port or 6379
         redis_password = parsed.password
         redis_username = parsed.username or 'default'
+        
+        # Log Redis connection info (without password)
+        print(f"Connecting to Redis at {redis_host}:{redis_port}", file=sys.stderr)
         
         # channels_redis 4.x supports both URL strings and tuple format
         # For Railway with password, we need to use the URL format or build connection dict
@@ -195,6 +199,7 @@ if REDIS_URL or REDIS_PUBLIC_URL:
                     },
                 },
             }
+            print("Redis configured with password authentication", file=sys.stderr)
         else:
             # No password, use tuple format (simpler and more reliable)
             CHANNEL_LAYERS = {
@@ -205,9 +210,11 @@ if REDIS_URL or REDIS_PUBLIC_URL:
                     },
                 },
             }
+            print("Redis configured without password", file=sys.stderr)
     except Exception as e:
         # If parsing fails, try using URL directly
         # This works with channels_redis 4.x
+        print(f"Redis URL parsing failed, using URL directly: {str(e)}", file=sys.stderr)
         CHANNEL_LAYERS = {
             "default": {
                 "BACKEND": "channels_redis.core.RedisChannelLayer",
@@ -216,6 +223,7 @@ if REDIS_URL or REDIS_PUBLIC_URL:
                 },
             },
         }
+    print("Redis channel layer configured successfully", file=sys.stderr)
 else:
     # Fallback for Railway if Redis is not configured
     # WARNING: InMemoryChannelLayer doesn't work across multiple instances
