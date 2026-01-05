@@ -31,8 +31,9 @@ RUN mkdir -p /app/media
 # Collect static files
 RUN python manage.py collectstatic --noinput || true
 
-# Expose port
+# Expose port (Railway will set PORT env var)
 EXPOSE 8080
-#CMD ["sh", "-c", "python manage.py migrate --noinput && python manage.py collectstatic --noinput && exec daphne -b 0.0.0.0 -p ${PORT:-8080} collab_commerce.asgi:application"]
-CMD ["sh", "-c", "exec daphne -b 0.0.0.0 -p ${PORT} collab_commerce.asgi:application"]
+
+# Railway sets PORT automatically, default to 8080 if not set
+CMD ["sh", "-c", "python manage.py migrate --noinput && python manage.py collectstatic --noinput && exec daphne -b 0.0.0.0 -p ${PORT:-8080} collab_commerce.asgi:application"]
 
