@@ -31,9 +31,22 @@ RUN mkdir -p /app/media
 # Collect static files
 RUN python manage.py collectstatic --noinput || true
 
-# Expose port (Railway will set PORT env var)
+# Expose port (Railway will set PORT env var dynamically)
 EXPOSE 8080
 
-# Railway sets PORT automatically, default to 8080 if not set
-CMD ["sh", "-c", "python manage.py migrate --noinput && python manage.py collectstatic --noinput && exec daphne -b 0.0.0.0 -p ${PORT:-8080} collab_commerce.asgi:application"]
+# Create startup script to handle Railway's PORT variable properly
+RUN echo '#!/bin/sh' > /app/start.sh && \
+    echo 'set -e' >> /app/start.sh && \
+    echo 'echo "Running migrations..."' >> /app/start.sh && \
+    echo 'python manage.py migrate --noinput' >> /app/start.sh && \
+    echo 'echo "Collecting static files..."' >> /app/start.sh && \
+    echo 'python manage.py collectstatic --noinput' >> /app/start.sh && \
+    echo 'PORT=${PORT:-8080}' >> /app/start.sh && \
+    echo 'echo "PORT environment variable: ${PORT:-not set, using 8080}"' >> /app/start.sh && \
+    echo 'echo "Starting Daphne server on 0.0.0.0:$PORT"' >> /app/start.sh && \
+    echo 'exec daphne -b 0.0.0.0 -p "$PORT" collab_commerce.asgi:application' >> /app/start.sh && \
+    chmod +x /app/start.sh
+
+# Railway sets PORT automatically - use startup script
+CMD ["/app/start.sh"]
 
