@@ -35,6 +35,4 @@ RUN python manage.py collectstatic --noinput || true
 EXPOSE 8000
 
 # Run Daphne server
-CMD ["sh", "-c", "python manage.py migrate --noinput && exec daphne -b 0.0.0.0 -p $PORT collab_commerce.asgi:application"]
-
-
+CMD ["sh", "-c", "exec daphne -b 0.0.0.0 -p $PORT collab_commerce.asgi:application"]

@@ -35,9 +35,7 @@ SECRET_KEY = os.environ["SECRET_KEY"]
 
 DEBUG = os.environ.get("DEBUG", "False") == "True"
 
-ALLOWED_HOSTS = [
-    ".up.railway.app",
-]
+ALLOWED_HOSTS = ['.railway.app', 'localhost', '127.0.0.1', '*']
 
 CSRF_TRUSTED_ORIGINS = [
     "https://*.up.railway.app",
@@ -45,9 +43,6 @@ CSRF_TRUSTED_ORIGINS = [
 
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
-
-LOGIN_REDIRECT_URL = "/"
-LOGOUT_REDIRECT_URL = "/login/"
 
 
 # Application definition
@@ -72,6 +67,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
 ]
 
 ROOT_URLCONF = 'collab_commerce.urls'
@@ -102,14 +98,31 @@ ASGI_APPLICATION = 'collab_commerce.asgi.application'
 REDIS_HOST = os.environ.get('REDIS_HOST', '127.0.0.1')
 REDIS_PORT = int(os.environ.get('REDIS_PORT', 6379))
 
+import os
+from urllib.parse import urlparse
+
+REDIS_URL = os.environ.get("REDIS_URL")
+
+if not REDIS_URL:
+    raise RuntimeError("REDIS_URL is not set")
+
+redis = urlparse(REDIS_URL)
+
+
 CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            "hosts": [(REDIS_HOST, REDIS_PORT)],
+            "hosts": [{
+                "address": redis.hostname,
+                "port": redis.port,
+                "password": redis.password,
+                "db": 0,
+            }],
         },
     },
 }
+
 # CHANNEL_LAYERS = {
 #     "default": {
 #         "BACKEND": "channels.layers.InMemoryChannelLayer"
