@@ -156,16 +156,22 @@ REDIS_PORT = int(os.environ.get('REDIS_PORT', 6379))
 from urllib.parse import urlparse
 
 REDIS_URL = os.environ.get("REDIS_URL")
-REDIS_PUBLIC_URL = os.environ.get("REDIS_PUBLIC_URL")  # Railway Redis public URL
+REDIS_PUBLIC_URL = os.environ.get("REDIS_PUBLIC_URL")  # Railway Redis public URL (avoid - incurs egress fees)
 
 # Use Redis if available, otherwise fall back to InMemoryChannelLayer for Railway
+# IMPORTANT: Always prefer REDIS_URL (private endpoint) over REDIS_PUBLIC_URL to avoid egress fees
+if REDIS_URL:
+    # Use private REDIS_URL (no egress fees, faster, recommended)
+    redis_url = REDIS_URL
+elif REDIS_PUBLIC_URL:
+    # Fallback to public URL only if private URL not available (not recommended)
+    redis_url = REDIS_PUBLIC_URL
+    import sys
+    print("WARNING: Using REDIS_PUBLIC_URL (public endpoint) - this incurs egress fees!", file=sys.stderr)
+    print("Please use REDIS_URL (private endpoint) instead.", file=sys.stderr)
+
+# Parse Redis URL for channels_redis if we have a Redis URL
 if REDIS_URL or REDIS_PUBLIC_URL:
-    # Prefer REDIS_URL (internal), fallback to REDIS_PUBLIC_URL (external)
-    # REDIS_URL is for internal service-to-service communication
-    # REDIS_PUBLIC_URL is for external access (usually not needed for channels)
-    redis_url = REDIS_URL or REDIS_PUBLIC_URL
-    
-    # Parse Redis URL for channels_redis
     # Railway format examples:
     # - redis://default:password@hostname:port
     # - redis://hostname:port
