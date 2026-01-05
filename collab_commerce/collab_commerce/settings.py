@@ -24,15 +24,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-vw_*!00ue)v3i5p39zgx-yqb85)l1x#76xd=-d6_4o6*+($)4@')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get('DEBUG', 'True') == 'True'
+DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '*').split(',') if os.environ.get('ALLOWED_HOSTS') else ['*']
 CSRF_TRUSTED_ORIGINS = [
-    'http://localhost:8000',
-    'https://your-production-domain.com',
-    'https://8554-152-56-16-148.ngrok-free.app',
-    'https://a7e6-152-56-12-193.ngrok-free.app',  # Add your ngrok URL here
+    "https://*.up.railway.app",
 ]
+
 
 
 # Application definition
@@ -144,10 +142,9 @@ USE_TZ = True
 # ... (rest of your settings)
 
 # Cashfree Payment Gateway Settings
-CASHFREE_APP_ID = 'TEST103854817bc35236b604a3ab7cee18458301'
-CASHFREE_SECRET_KEY = 'cfsk_ma_test_9a1f846cfb5b69d3907797b105226c7d_d5996618'
-CASHFREE_API_BASE = 'https://sandbox.cashfree.com/pg' # For testing environment
-
+CASHFREE_APP_ID = os.getenv("CASHFREE_APP_ID")
+CASHFREE_SECRET_KEY = os.getenv("CASHFREE_SECRET_KEY")
+CASHFREE_API_BASE = os.getenv("CASHFREE_API_BASE")
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
