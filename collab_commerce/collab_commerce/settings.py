@@ -130,14 +130,20 @@ REDIS_PORT = int(os.environ.get('REDIS_PORT', 6379))
 from urllib.parse import urlparse
 
 REDIS_URL = os.environ.get("REDIS_URL")
+REDIS_PUBLIC_URL = os.environ.get("REDIS_PUBLIC_URL")  # Railway Redis public URL
 
 # Use Redis if available, otherwise fall back to InMemoryChannelLayer for Railway
-if REDIS_URL:
+if REDIS_URL or REDIS_PUBLIC_URL:
+    # Prefer REDIS_URL, fallback to REDIS_PUBLIC_URL
+    redis_url = REDIS_URL or REDIS_PUBLIC_URL
+    
+    # Parse Redis URL if needed (Railway format: redis://default:password@host:port)
+    # channels_redis can handle URL strings directly
     CHANNEL_LAYERS = {
         "default": {
             "BACKEND": "channels_redis.core.RedisChannelLayer",
             "CONFIG": {
-                "hosts": [REDIS_URL],
+                "hosts": [redis_url],
             },
         },
     }
