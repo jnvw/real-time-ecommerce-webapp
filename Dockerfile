@@ -31,18 +31,23 @@ RUN mkdir -p /app/media
 # Collect static files
 RUN python manage.py collectstatic --noinput || true
 
-# Expose port (Railway will set PORT env var dynamically)
-EXPOSE 8080
+# Expose port (Railway will set PORT env var to 8000)
+EXPOSE 8000
 
 # Create startup script to handle Railway's PORT variable properly
 RUN echo '#!/bin/sh' > /app/start.sh && \
     echo 'set -e' >> /app/start.sh && \
+    echo 'echo "=== Starting Collab Commerce ==="' >> /app/start.sh && \
     echo 'echo "Running migrations..."' >> /app/start.sh && \
     echo 'python manage.py migrate --noinput' >> /app/start.sh && \
     echo 'echo "Collecting static files..."' >> /app/start.sh && \
     echo 'python manage.py collectstatic --noinput' >> /app/start.sh && \
-    echo 'PORT=${PORT:-8080}' >> /app/start.sh && \
-    echo 'echo "PORT environment variable: ${PORT:-not set, using 8080}"' >> /app/start.sh && \
+    echo 'if [ -z "$PORT" ]; then' >> /app/start.sh && \
+    echo '  PORT=8000' >> /app/start.sh && \
+    echo '  echo "WARNING: PORT not set, using default 8000"' >> /app/start.sh && \
+    echo 'else' >> /app/start.sh && \
+    echo '  echo "PORT environment variable is set to: $PORT"' >> /app/start.sh && \
+    echo 'fi' >> /app/start.sh && \
     echo 'echo "Starting Daphne server on 0.0.0.0:$PORT"' >> /app/start.sh && \
     echo 'exec daphne -b 0.0.0.0 -p "$PORT" collab_commerce.asgi:application' >> /app/start.sh && \
     chmod +x /app/start.sh

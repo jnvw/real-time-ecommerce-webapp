@@ -33,16 +33,43 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-vw_*!00ue)v3i5p39zgx-
 
 # SECRET_KEY = os.environ["SECRET_KEY"]
 
-DEBUG = os.environ.get("DEBUG", "True") == "True"
+DEBUG = os.environ.get("DEBUG", "False") == "True"
 
-ALLOWED_HOSTS = ['.railway.app', 'localhost', '127.0.0.1', '*']
+# Get Railway domain if available, otherwise use defaults
+RAILWAY_PUBLIC_DOMAIN = os.environ.get("RAILWAY_PUBLIC_DOMAIN", "")
+ALLOWED_HOSTS_ENV = os.environ.get("ALLOWED_HOSTS")
 
-CSRF_TRUSTED_ORIGINS = [
-    "https://*.up.railway.app",
-]
+if ALLOWED_HOSTS_ENV:
+    ALLOWED_HOSTS = [host.strip() for host in ALLOWED_HOSTS_ENV.split(",")]
+elif RAILWAY_PUBLIC_DOMAIN:
+    # Use Railway's public domain - allow both exact domain and wildcard
+    ALLOWED_HOSTS = [
+        RAILWAY_PUBLIC_DOMAIN,
+        '.railway.app',  # Allow all Railway subdomains
+        'localhost',
+        '127.0.0.1'
+    ]
+else:
+    # Fallback for local development
+    ALLOWED_HOSTS = ['.railway.app', 'localhost', '127.0.0.1', '*']
 
-SESSION_COOKIE_SECURE = True
-CSRF_COOKIE_SECURE = True
+# CSRF trusted origins
+CSRF_TRUSTED_ORIGINS_ENV = os.environ.get("CSRF_TRUSTED_ORIGINS")
+if CSRF_TRUSTED_ORIGINS_ENV:
+    CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in CSRF_TRUSTED_ORIGINS_ENV.split(",")]
+elif RAILWAY_PUBLIC_DOMAIN:
+    # Use Railway's public domain for CSRF
+    CSRF_TRUSTED_ORIGINS = [
+        f"https://{RAILWAY_PUBLIC_DOMAIN}",
+        "https://*.up.railway.app",
+        "https://*.railway.app"
+    ]
+else:
+    CSRF_TRUSTED_ORIGINS = ["https://*.up.railway.app", "https://*.railway.app"]
+
+# Security settings for production
+SESSION_COOKIE_SECURE = not DEBUG  # Only secure in production
+CSRF_COOKIE_SECURE = not DEBUG  # Only secure in production
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 
