@@ -21,7 +21,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-# SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-vw_*!00ue)v3i5p39zgx-yqb85)l1x#76xd=-d6_4o6*+($)4@')
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-vw_*!00ue)v3i5p39zgx-yqb85)l1x#76xd=-d6_4o6*+($)4@')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 # DEBUG = os.environ.get('DEBUG', 'True') == 'True'
@@ -31,7 +31,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 #     "https://*.up.railway.app",
 # ]
 
-SECRET_KEY = os.environ["SECRET_KEY"]
+# SECRET_KEY = os.environ["SECRET_KEY"]
 
 DEBUG = os.environ.get("DEBUG", "False") == "True"
 
@@ -61,13 +61,13 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',
+    'django.middleware.clickjacking.XFrameOptionsMiddleware'
 ]
 
 ROOT_URLCONF = 'collab_commerce.urls'
@@ -102,23 +102,16 @@ import os
 from urllib.parse import urlparse
 
 REDIS_URL = os.environ.get("REDIS_URL")
-
 if not REDIS_URL:
     raise RuntimeError("REDIS_URL is not set")
 
-redis = urlparse(REDIS_URL)
 
 
 CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            "hosts": [{
-                "address": redis.hostname,
-                "port": redis.port,
-                "password": redis.password,
-                "db": 0,
-            }],
+            "hosts": [REDIS_URL],
         },
     },
 }
