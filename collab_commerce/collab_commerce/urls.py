@@ -5,6 +5,7 @@ from django.conf.urls.static import static
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 
 urlpatterns = [
+    path("", lambda r: HttpResponse("OK"), name="health"),
     path('admin/', admin.site.urls),
     # Include the new dashboard URLs
     path('', include('dashboard.urls')),

@@ -33,7 +33,7 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-vw_*!00ue)v3i5p39zgx-
 
 # SECRET_KEY = os.environ["SECRET_KEY"]
 
-DEBUG = os.environ.get("DEBUG", "False") == "True"
+DEBUG = os.environ.get("DEBUG", "True") == "True"
 
 ALLOWED_HOSTS = ['.railway.app', 'localhost', '127.0.0.1', '*']
 
@@ -43,6 +43,8 @@ CSRF_TRUSTED_ORIGINS = [
 
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
 
 
 # Application definition
