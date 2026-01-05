@@ -32,7 +32,7 @@ RUN mkdir -p /app/media
 RUN python manage.py collectstatic --noinput || true
 
 # Expose port
-EXPOSE 8000
+EXPOSE 8080
 
 # Run Daphne server
 CMD ["sh", "-c", "exec daphne -b 0.0.0.0 -p $PORT collab_commerce.asgi:application"]
