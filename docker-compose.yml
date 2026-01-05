@@ -19,7 +19,7 @@ services:
       sh -c "
       python manage.py migrate --noinput &&
       python manage.py collectstatic --noinput &&
-      daphne -b 0.0.0.0 -p 8080 collab_commerce.asgi:application
+      daphne -b 0.0.0.0 -p ${PORT:-8080} collab_commerce.asgi:application
       "
     volumes:
       - ./collab_commerce:/app
