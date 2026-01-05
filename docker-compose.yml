@@ -15,7 +15,12 @@ services:
   web:
     build: .
     container_name: collab_commerce_web
-    command: daphne -b 0.0.0.0 -p 8000 collab_commerce.asgi:application
+    command: >
+      sh -c "
+      python manage.py migrate --noinput &&
+      python manage.py collectstatic --noinput &&
+      daphne -b 0.0.0.0 -p 8000 collab_commerce.asgi:application
+      "
     volumes:
       - ./collab_commerce:/app
       - static_volume:/app/staticfiles
@@ -23,16 +28,20 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
-      - REDIS_URL=redis://redis:6379/0
-      - SECRET_KEY=django-insecure-vw_*!00ue)v3i5p39zgx-yqb85)l1x#76xd=-d6_4o6*+($)4@
-      - DEBUG=True
-      - ALLOWED_HOSTS=.railway.app,localhost,127.0.0.1,*
-      - CSRF_TRUSTED_ORIGINS=https://*.up.railway.app
-      - SESSION_COOKIE_SECURE=True
-      - CSRF_COOKIE_SECURE=True
-      - DJANGO_SETTINGS_MODULE=collab_commerce.settings
+      SECRET_KEY: django-insecure-dev-only
+      DEBUG: "True"
+      DJANGO_SETTINGS_MODULE: collab_commerce.settings
+
+      REDIS_URL: redis://redis:6379/0
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+
+      ALLOWED_HOSTS: localhost,127.0.0.1,*
+      CSRF_TRUSTED_ORIGINS: http://localhost:8000
+
+      SESSION_COOKIE_SECURE: "False"
+      CSRF_COOKIE_SECURE: "False"
+
     depends_on:
       redis:
         condition: service_healthy
@@ -42,4 +51,3 @@ volumes:
   redis_data:
   static_volume:
   media_volume:
-
