@@ -54,23 +54,49 @@ else:
     ALLOWED_HOSTS = ['.railway.app', 'localhost', '127.0.0.1', '*']
 
 # CSRF trusted origins
+# Note: Django does NOT support wildcards in CSRF_TRUSTED_ORIGINS
+# Must use exact domains
 CSRF_TRUSTED_ORIGINS_ENV = os.environ.get("CSRF_TRUSTED_ORIGINS")
 if CSRF_TRUSTED_ORIGINS_ENV:
     CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in CSRF_TRUSTED_ORIGINS_ENV.split(",")]
-elif RAILWAY_PUBLIC_DOMAIN:
-    # Use Railway's public domain for CSRF
-    CSRF_TRUSTED_ORIGINS = [
-        f"https://{RAILWAY_PUBLIC_DOMAIN}",
-        "https://*.up.railway.app",
-        "https://*.railway.app"
-    ]
 else:
-    CSRF_TRUSTED_ORIGINS = ["https://*.up.railway.app", "https://*.railway.app"]
+    # Build CSRF_TRUSTED_ORIGINS list
+    CSRF_TRUSTED_ORIGINS = []
+    
+    # Add Railway public domain if available (exact domain required)
+    if RAILWAY_PUBLIC_DOMAIN:
+        CSRF_TRUSTED_ORIGINS.extend([
+            f"https://{RAILWAY_PUBLIC_DOMAIN}",
+            f"http://{RAILWAY_PUBLIC_DOMAIN}",  # Include HTTP for development
+        ])
+    
+    # Add local development origins
+    if DEBUG:
+        CSRF_TRUSTED_ORIGINS.extend([
+            "http://localhost:8000",
+            "http://127.0.0.1:8000",
+            "http://localhost",
+            "http://127.0.0.1",
+        ])
+    
+    # Remove duplicates while preserving order
+    CSRF_TRUSTED_ORIGINS = list(dict.fromkeys(CSRF_TRUSTED_ORIGINS))
+    
+    # If no origins set, add a default (for Railway)
+    if not CSRF_TRUSTED_ORIGINS:
+        # Fallback - you should set CSRF_TRUSTED_ORIGINS env var with exact domain
+        CSRF_TRUSTED_ORIGINS = ["https://shopcircle.up.railway.app"]
 
 # Security settings for production
+# In production (DEBUG=False), use secure cookies
+# In development (DEBUG=True), allow non-secure cookies for easier testing
 SESSION_COOKIE_SECURE = not DEBUG  # Only secure in production
 CSRF_COOKIE_SECURE = not DEBUG  # Only secure in production
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
+# Additional CSRF settings for Railway
+CSRF_USE_SESSIONS = False  # Use cookies for CSRF tokens
+CSRF_COOKIE_HTTPONLY = False  # Allow JavaScript to read CSRF token (needed for AJAX)
 
 
 
@@ -134,26 +160,70 @@ REDIS_PUBLIC_URL = os.environ.get("REDIS_PUBLIC_URL")  # Railway Redis public UR
 
 # Use Redis if available, otherwise fall back to InMemoryChannelLayer for Railway
 if REDIS_URL or REDIS_PUBLIC_URL:
-    # Prefer REDIS_URL, fallback to REDIS_PUBLIC_URL
+    # Prefer REDIS_URL (internal), fallback to REDIS_PUBLIC_URL (external)
+    # REDIS_URL is for internal service-to-service communication
+    # REDIS_PUBLIC_URL is for external access (usually not needed for channels)
     redis_url = REDIS_URL or REDIS_PUBLIC_URL
     
-    # Parse Redis URL if needed (Railway format: redis://default:password@host:port)
-    # channels_redis can handle URL strings directly
-    CHANNEL_LAYERS = {
-        "default": {
-            "BACKEND": "channels_redis.core.RedisChannelLayer",
-            "CONFIG": {
-                "hosts": [redis_url],
+    # Parse Redis URL for channels_redis
+    # Railway format examples:
+    # - redis://default:password@hostname:port
+    # - redis://hostname:port
+    try:
+        parsed = urlparse(redis_url)
+        redis_host = parsed.hostname or 'localhost'
+        redis_port = parsed.port or 6379
+        redis_password = parsed.password
+        redis_username = parsed.username or 'default'
+        
+        # channels_redis 4.x supports both URL strings and tuple format
+        # For Railway with password, we need to use the URL format or build connection dict
+        if redis_password:
+            # Build connection configuration with password
+            # channels_redis can handle URL strings directly in newer versions
+            CHANNEL_LAYERS = {
+                "default": {
+                    "BACKEND": "channels_redis.core.RedisChannelLayer",
+                    "CONFIG": {
+                        "hosts": [redis_url],  # channels_redis 4.x supports full URL
+                    },
+                },
+            }
+        else:
+            # No password, use tuple format (simpler and more reliable)
+            CHANNEL_LAYERS = {
+                "default": {
+                    "BACKEND": "channels_redis.core.RedisChannelLayer",
+                    "CONFIG": {
+                        "hosts": [(redis_host, redis_port)],
+                    },
+                },
+            }
+    except Exception as e:
+        # If parsing fails, try using URL directly
+        # This works with channels_redis 4.x
+        CHANNEL_LAYERS = {
+            "default": {
+                "BACKEND": "channels_redis.core.RedisChannelLayer",
+                "CONFIG": {
+                    "hosts": [redis_url],
+                },
             },
-        },
-    }
+        }
 else:
     # Fallback for Railway if Redis is not configured
+    # WARNING: InMemoryChannelLayer doesn't work across multiple instances
+    # and doesn't persist between restarts - only for single-instance development
     CHANNEL_LAYERS = {
         "default": {
             "BACKEND": "channels.layers.InMemoryChannelLayer"
         }
     }
+    # Log warning about using InMemoryChannelLayer
+    import sys
+    print("WARNING: Redis not configured! Using InMemoryChannelLayer.", file=sys.stderr)
+    print("Shared cart and chat will NOT work properly across multiple users.", file=sys.stderr)
+    print("Please add Redis service in Railway and set REDIS_URL environment variable.", file=sys.stderr)
 
 # Database configuration - Use PostgreSQL on Railway, SQLite locally
 DATABASE_URL = os.environ.get('DATABASE_URL')
