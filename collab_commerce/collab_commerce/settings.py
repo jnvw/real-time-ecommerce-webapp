@@ -109,8 +109,12 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'shop',
+    # Third-party apps
+    'cloudinary',
+    'cloudinary_storage',
     'channels',
+    # Local apps
+    'shop',
     'dashboard',
 ]
 
@@ -312,8 +316,17 @@ CASHFREE_API_BASE = os.getenv("CASHFREE_API_BASE")
 
 STATIC_URL = 'static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles/')
+
+# Media files
+# By default, use local media; when CLOUDINARY_URL is set, use Cloudinary for media storage
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
+
+# Cloudinary configuration (for media uploaded via admin/product images)
+CLOUDINARY_URL = os.environ.get("CLOUDINARY_URL")
+if CLOUDINARY_URL:
+    # django-cloudinary-storage will read CLOUDINARY_URL from the environment
+    DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
