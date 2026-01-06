@@ -119,7 +119,11 @@
     const chatForm = document.querySelector('#chat-form');
     const chatInput = document.querySelector('#chat-message-input');
 
-    const chatSocket = new WebSocket('ws://' + window.location.host + '/ws/group/' + '{{ group.secret_code }}/');
+    //const chatSocket = new WebSocket('ws://' + window.location.host + '/ws/group/' + '{{ group.secret_code }}/'); error ahe 
+    // Detect if the page is using https or http and pick wss or ws accordingly
+    const ws_scheme = window.location.protocol === "https:" ? "wss" : "ws";
+
+    const chatSocket = new WebSocket(ws_scheme + '://' + window.location.host + '/ws/group/' + '{{ group.secret_code }}/');
 
     chatSocket.onopen = function(e) {
         console.log("WebSocket connection established.");
